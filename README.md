@@ -16,7 +16,7 @@ The app changes the saved login while keeping your local workspace and settings.
 
 ## Get the app
 
-The project is at an early stage and does not yet have a published release. When available, downloads will be listed on the [Releases page](https://github.com/zfdang/antigravity-account-switcher/releases). Developers can build the current version using the [development guide](docs/development.md).
+Download the latest `Antigravity-Account-Switcher-v<version>-arm64.zip` from the [Releases page](https://github.com/zfdang/antigravity-account-switcher/releases). Unzip it and move the app to Applications. The current release supports Apple silicon Macs. Developers can build the current version using the [development guide](docs/development.md).
 
 You need macOS 13 or later, Antigravity installed in `/Applications`, and an Antigravity account that is already signed in. The app is not notarized; macOS may display a security warning when opening it.
 

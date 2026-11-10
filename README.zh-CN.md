@@ -16,7 +16,7 @@
 
 ## 获取应用
 
-项目仍处于早期阶段，尚未发布正式安装包。发布后可在 [Releases 页面](https://github.com/zfdang/antigravity-account-switcher/releases)下载。开发者可以参考[开发文档](docs/development.zh-CN.md)构建当前版本。
+从 [Releases 页面](https://github.com/zfdang/antigravity-account-switcher/releases)下载最新的 `Antigravity-Account-Switcher-v<version>-arm64.zip`，解压后将应用移到“应用程序”目录。当前发布版本支持 Apple Silicon Mac。开发者可以参考[开发文档](docs/development.zh-CN.md)构建当前版本。
 
 你需要 macOS 13 或更高版本、安装在“应用程序”目录中的 Antigravity，以及至少一个已经登录的 Antigravity 账号。应用尚未经过 Apple 公证，打开时 macOS 可能显示安全提示。
 
