@@ -2,8 +2,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
-swift build -c release
-bin_dir=$(swift build -c release --show-bin-path)
+version=$(tr -d "\n" < VERSION)
+if [[ ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then echo "Invalid VERSION: expected a stable semantic version" >&2; exit 1; fi
+build_args=(-c release)
+if [[ -n "${BUILD_ARCH:-}" ]]; then build_args+=(--arch "$BUILD_ARCH"); fi
+swift build "${build_args[@]}"
+bin_dir=$(swift build "${build_args[@]}" --show-bin-path)
 app="dist/Antigravity Account Switcher.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp "$bin_dir/AntigravitySwitcher" "$app/Contents/MacOS/AntigravitySwitcher"
@@ -23,6 +27,7 @@ cat > "$app/Contents/Info.plist" <<'PLIST'
 <key>NSHighResolutionCapable</key><true/>
 </dict></plist>
 PLIST
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $version" "$app/Contents/Info.plist"
 iconset=$(mktemp -d)/AppIcon.iconset
 mkdir -p "$iconset"
 for size in 16 32 128 256 512; do

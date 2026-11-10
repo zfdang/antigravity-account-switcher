@@ -4,7 +4,7 @@ on:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: signed-build-${{ github.ref }}
   cancel-in-progress: false
@@ -14,6 +14,7 @@ jobs:
     timeout-minutes: 25
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      BUILD_ARCH: arm64
     steps:
       - uses: actions/checkout@v4
       - name: Import fixed signing identity
@@ -25,12 +26,38 @@ jobs:
         run: |
           ./scripts/build.sh
           codesign --verify --deep --strict --verbose=2 'dist/Antigravity Account Switcher.app'
-          ditto -c -k --sequesterRsrc --keepParent 'dist/Antigravity Account Switcher.app' 'dist/Antigravity-Account-Switcher.zip'
+          version=$(tr -d '\n' < VERSION)
+          ditto -c -k --sequesterRsrc --keepParent 'dist/Antigravity Account Switcher.app' "dist/Antigravity-Account-Switcher-v${version}-arm64.zip"
       - uses: actions/upload-artifact@v4
         with:
           name: Antigravity-Account-Switcher
-          path: dist/Antigravity-Account-Switcher.zip
+          path: dist/Antigravity-Account-Switcher-v*-arm64.zip
           if-no-files-found: error
+      - name: Publish versioned release
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          version="$(tr -d '\n' < VERSION)"
+          if [[ ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "Invalid VERSION" >&2; exit 1
+          fi
+          tag="v$version"
+          status=$(gh api -i "repos/$GH_REPO/releases/tags/$tag" 2>&1) && code=0 || code=$?
+          if [[ $code -eq 0 ]]; then
+            echo "Release $tag already exists; leaving it unchanged."
+          elif [[ "$status" =~ HTTP/[0-9.]+\ 404 ]]; then
+            remote_tag=$(git ls-remote --tags origin "refs/tags/$tag")
+            if [[ -n "$remote_tag" ]]; then
+              echo "Tag $tag already exists without a release; refusing to replace it." >&2; exit 1
+            fi
+            printf "%s\n" "Requires macOS 13 or later and an Apple silicon Mac. This self-signed build is not notarized by Apple." > "$RUNNER_TEMP/release-notes.md"
+            gh release create "$tag" "dist/Antigravity-Account-Switcher-v${version}-arm64.zip" \
+              --target "$GITHUB_SHA" --title "$tag" --notes-file "$RUNNER_TEMP/release-notes.md" --generate-notes --latest
+          else
+            echo "Could not check whether release $tag exists." >&2; exit 1
+          fi
       - name: Remove temporary signing keychain
         if: always()
         run: python3 scripts/release-signing-keychain.py cleanup
