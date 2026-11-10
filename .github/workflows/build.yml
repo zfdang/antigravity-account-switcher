@@ -1,0 +1,36 @@
+name: Signed macOS build
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: signed-build-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 25
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import fixed signing identity
+        env:
+          MACOS_SIGNING_P12_BASE64: ${{ secrets.MACOS_SIGNING_P12_BASE64 }}
+          MACOS_SIGNING_P12_PASSWORD: ${{ secrets.MACOS_SIGNING_P12_PASSWORD }}
+        run: python3 scripts/release-signing-keychain.py setup
+      - name: Build and verify application
+        run: |
+          ./scripts/build.sh
+          codesign --verify --deep --strict --verbose=2 'dist/Antigravity Account Switcher.app'
+          ditto -c -k --sequesterRsrc --keepParent 'dist/Antigravity Account Switcher.app' 'dist/Antigravity-Account-Switcher.zip'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Antigravity-Account-Switcher
+          path: dist/Antigravity-Account-Switcher.zip
+          if-no-files-found: error
+      - name: Remove temporary signing keychain
+        if: always()
+        run: python3 scripts/release-signing-keychain.py cleanup
