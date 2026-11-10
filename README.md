@@ -2,45 +2,40 @@
 
 [简体中文](README.zh-CN.md) · English
 
-A macOS menu bar app for managing multiple Antigravity accounts. Save your current login, add another account through Antigravity's own sign-in flow, switch between accounts, and remove saved accounts while keeping your local workspace and settings.
+Manage your work, personal, and other Antigravity accounts from your Mac's menu bar. Save an account once, then switch accounts without setting up your workspace again.
 
-The interface follows the system language by default (Chinese for a Chinese system, English otherwise). Choose **Language** in the menu to override it or return to **Follow System**.
+## What you can do
 
-## Requirements
+- **Add accounts:** Sign in through Antigravity and save each account for later.
+- **Switch accounts:** Pick a saved account from the menu bar and follow the guided steps.
+- **Remove accounts:** Remove a saved account from the app without deleting your Google account.
+- **Recover a login:** Restore the previous account if adding or switching is interrupted.
+- **Choose a language:** Use Chinese or English, or follow your Mac's system language.
 
-- macOS 13 or later and Antigravity installed at `/Applications/Antigravity.app`.
-- An existing signed-in Antigravity account. Adding another account starts by saving the current login.
-- Keychain access for saved credentials and the active Antigravity login. macOS may request authorization, especially the first time or after a signing identity changes.
+The app changes the saved login while keeping your local workspace and settings. Cloud data and access can differ between accounts, and Antigravity may make its own changes when you sign in.
 
-Antigravity's credential format is an internal implementation detail and may change. The app changes login credentials, but account-specific cloud data and changes made by Antigravity itself may differ between accounts. Confirm the active account in Antigravity after switching.
+## Get the app
 
-## Getting started
+The project is at an early stage and does not yet have a published release. When available, downloads will be listed on the [Releases page](https://github.com/zfdang/antigravity-account-switcher/releases). Developers can build the current version using the [development guide](docs/development.md).
 
-1. Build the application as described below, then open `dist/Antigravity Account Switcher.app`. Its icon appears in the menu bar.
-2. Choose **Save Current Account**, save your work, and close Antigravity. The wizard saves the current login to the macOS keychain.
-3. Choose **Add Account** and follow the wizard. Sign in through Antigravity, close it after login, and choose **Finish Sign-in** in the wizard.
-4. To switch accounts, select a saved account in the menu and follow the wizard. Close Antigravity and any `agy` command-line processes before continuing; Antigravity reopens after the switch.
-5. Use **Remove Account** to delete a saved copy. This does not delete the Google account or sign out the current IDE session.
+You need macOS 13 or later, Antigravity installed in `/Applications`, and an Antigravity account that is already signed in. The app is not notarized; macOS may display a security warning when opening it.
 
-If an operation is interrupted, close Antigravity and use **Restore Previous Account** in the menu. The app stores account credentials in the local keychain and does not upload them. Do not share credentials or keychain exports.
+## Get started
 
-## Build and test
+1. Open **Antigravity Account Switcher**. Its icon appears in the menu bar.
+2. Select **Save Current Account**. Save your work and close Antigravity when prompted; the app saves your current login for later.
+3. Select **Add Account** and follow the wizard. Sign in to the other account in Antigravity, close Antigravity after signing in, then select **Finish Sign-in** in the wizard.
+4. To switch, select an account in the menu and follow the wizard. Save your work and close Antigravity and any `agy` command-line processes when prompted. Antigravity reopens after the switch; check the displayed account there.
+5. To remove a saved account, select **Remove Account** and confirm. This removes the app's saved copy; it does not delete the Google account or sign out the current Antigravity session.
 
-Install Xcode, then run:
+If an operation is interrupted, close Antigravity and select **Restore Previous Account** in the menu. If macOS asks for Keychain access, approve the request to let the app read or save the login; denying access stops the operation.
 
-```sh
-./build.sh
-DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
-```
+## Language and privacy
 
-The signed app is written to `dist/`. Signed builds require the private key corresponding to [the pinned certificate](scripts/signing/release-certificate.pem). For a local ad-hoc build without that key, run `UNSIGNED_BUILD=1 ./build.sh`; changing signing identities may cause additional keychain prompts. The app is not notarized.
+The interface follows your Mac's preferred language by default: Chinese if the first preferred language is Chinese, and English otherwise. Choose **Language** in the menu to switch manually or return to **Follow System**.
 
-## CI and signing
+Account credentials are stored in the Mac's Keychain and are not uploaded by this app. Antigravity itself handles sign-in. Never share your credentials or Keychain exports.
 
-CI runs tests and builds an ad-hoc bundle on pull requests and pushes. A separate workflow builds a signed zip on pushes to `main` and manual runs, and uploads it as an artifact; it does not publish a release. The signed workflow requires repository secrets `MACOS_SIGNING_P12_BASE64` and `MACOS_SIGNING_P12_PASSWORD`, containing the password-protected identity matching the pinned public certificate. It fails if the identity does not match. Never commit the private key, `.p12`, or password.
+## For developers
 
-To rotate signing credentials, export the matching identity from Keychain Access to a password-protected `.p12` outside the repository, update the public certificate and both secrets, and keep a secure backup. For example, set the archive with `base64 -i /secure/path/signing.p12 | gh secret set MACOS_SIGNING_P12_BASE64` and enter the password interactively using `gh secret set MACOS_SIGNING_P12_PASSWORD`. Replacing the identity can trigger keychain authorization again.
-
-## Project documents
-
-The [product design](docs/product-design.md) and [technical design](docs/technical-design.md) describe the intended behavior, compatibility investigation, and recovery considerations. They are currently written in Chinese.
+See the [development guide](docs/development.md) for building, testing, and signing. The [product design](docs/product-design.md) and [technical design](docs/technical-design.md) are also available in Chinese.
